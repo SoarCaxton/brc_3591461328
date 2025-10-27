@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>BRC - Boss Rush Challenge</name>
+    <directory>brc</directory>
+    <id>3591461328</id>
+    <description>
+	Final Boss Fights in a row!
+	All final bosses will appear one after another. Good luck!
+	How to play:
+	Challenges - Custom Challenges - Boss Rush Challenge
+    Note: Do not exit the game outside the Boss room, or the challenge progress will be reset!
+	终点头目车轮战！
+	所有的终点头目轮番上阵，祝你胜利！
+	游戏方法：
+	挑战 - 自定义挑战 - Boss Rush Challenge
+    注意：不要在Boss房外退出游戏，否则挑战进度会清零！
+	</description>
+    <version>1.7.1</version>
+    <visibility>Public</visibility>
+    <tag id="Lua"/>
+    <tag id="Bosses"/>
+    <tag id="Challenges"/>
+</metadata>
