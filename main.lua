@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.7.2'
+BRCMod.Version = '1.8.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -115,14 +115,6 @@ function BRCMod:PostNewRoom()
     local stage = level:GetStage()
     local roomDesc = level:GetCurrentRoomDesc()
     local room = level:GetCurrentRoom()
-    if stage ~= LevelStage.STAGE8 then
-        local door = roomDesc.Data.Doors
-        for i=0,7 do
-            if door&(1<<i)>0 then
-                room:RemoveDoor(i)
-            end
-        end
-    end
     local index = roomDesc.SafeGridIndex
     local name = roomDesc.Data.Name
     local bossIndex = self:GetCurrentBossIndex()
@@ -184,13 +176,21 @@ function BRCMod:PostNewRoom()
         end
         return
     end
+    if stage ~= LevelStage.STAGE8 then
+        local door = roomDesc.Data.Doors
+        for i=0,7 do
+            if door&(1<<i)>0 then
+                room:RemoveDoor(i)
+            end
+        end
+    end
     if index == GridRooms.ROOM_DEBUG_IDX then
         lastBossIndex = self:GetCurrentBossIndex()
     end
 end
 BRCMod.inCountDown = false
 BRCMod.countDown = 0
-BRCMod.isButtonBackspaceTriggered = false
+-- BRCMod.isButtonBackspaceTriggered = false
 function BRCMod:CountDownToBoss()
     if self.inCountDown then return end
     self.inCountDown = true
@@ -216,14 +216,14 @@ function BRCMod:CountDownToBoss()
         local posX = Isaac.GetScreenWidth()/2
         local posY = Isaac.GetScreenHeight()/32
         Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-        text = 'Press Backspace to continue...'
-        textWidth = Isaac.GetTextWidth(text)
-        textSize = 1
-        posY = posY + 30
-        Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-        if self.isButtonBackspaceTriggered then
-            self.countDown = 0
-        end
+        -- text = 'Press Backspace to continue...'
+        -- textWidth = Isaac.GetTextWidth(text)
+        -- textSize = 1
+        -- posY = posY + 30
+        -- Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
+        -- if self.isButtonBackspaceTriggered then
+        --     self.countDown = 0
+        -- end
         if self.countDown <= 0 then
             self.inTp = true
             Isaac.ExecuteCommand(nextBoss.stage)
@@ -276,6 +276,20 @@ function BRCMod:PreSpawnCleanAward(rng, spawnPos)
     end
     return true
 end
+function BRCMod:Mom(npc)
+    if npc.SubType ~= 0 and self:GetCurrentBossIndex() == 1 then
+        local newSpawnSeed = Random()
+        if newSpawnSeed == 0 then
+            newSpawnSeed = 1
+        end
+        local level = Game():GetLevel()
+        local roomDesc = level:GetRoomByIdx(level:GetCurrentRoomDesc().SafeGridIndex)
+        roomDesc.SpawnSeed = newSpawnSeed
+        npc:Morph(EntityType.ENTITY_MOM, npc.Variant, 0, -1)
+        local sprite = npc:GetSprite()
+        sprite:Reload()
+    end
+end
 function BRCMod:PostNPCRender(npc)
     local sprite = npc:GetSprite()
     if npc:Exists() and npc.Variant == 0 and sprite:GetAnimation() == 'Death' and sprite:GetFrame() >= 60 then
@@ -286,15 +300,15 @@ function BRCMod:PostNPCRender(npc)
 end
 function BRCMod:PostRender()
     local game = Game()
-    self.isButtonBackspaceTriggered = false
-    if not Game():IsPaused() then
-        for i=1,game:GetNumPlayers() do
-            if Input.IsButtonPressed(Keyboard.KEY_BACKSPACE, Isaac.GetPlayer(i-1).ControllerIndex) then
-                self.isButtonBackspaceTriggered = true
-                break
-            end
-        end
-    end
+    -- self.isButtonBackspaceTriggered = false
+    -- if not Game():IsPaused() then
+    --     for i=1,game:GetNumPlayers() do
+    --         if Input.IsButtonPressed(Keyboard.KEY_BACKSPACE, Isaac.GetPlayer(i-1).ControllerIndex) then
+    --             self.isButtonBackspaceTriggered = true
+    --             break
+    --         end
+    --     end
+    -- end
     if not game:GetRoom():IsClear() then
         if not self.inBossFight then
             self.inBossFight = true
@@ -303,15 +317,16 @@ function BRCMod:PostRender()
     end
     if self.inCountDown or self.inBossFight then return end
     local stage = game:GetLevel():GetStage()
-    if stage == LevelStage.STAGE1_1 then
-        local text = 'Press Backspace to start.'
-        local textWidth = Isaac.GetTextWidth(text)
-        local textSize = 1
-        local posX = Isaac.GetScreenWidth()/2
-        local posY = Isaac.GetScreenHeight()/32
-        Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-    end
-    if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 or self.isButtonBackspaceTriggered then
+    -- if stage == LevelStage.STAGE1_1 then
+    --     local text = 'Press Backspace to start.'
+    --     local textWidth = Isaac.GetTextWidth(text)
+    --     local textSize = 1
+    --     local posX = Isaac.GetScreenWidth()/2
+    --     local posY = Isaac.GetScreenHeight()/32
+    --     Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
+    -- end
+    -- if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 or self.isButtonBackspaceTriggered then
+    if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 then
         self:CountDownToBoss()
     end
 end
@@ -520,7 +535,7 @@ BRCMod.Callbacks = {
     [ModCallbacks.MC_POST_NEW_ROOM] = {[BRCMod.PostNewRoom]={}, [BRCMod.SpawnStartingItems]={}},
     [ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = {[BRCMod.PreSpawnCleanAward]={}},
     [ModCallbacks.MC_POST_PICKUP_INIT] = {[BRCMod.PostPickupInit]={PickupVariant.PICKUP_COLLECTIBLE}},
-    [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.PostNPCRender]={EntityType.ENTITY_BEAST}},
+    [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.PostNPCRender]={EntityType.ENTITY_BEAST}, [BRCMod.Mom]={EntityType.ENTITY_MOM}},
     [ModCallbacks.MC_POST_RENDER] = {[BRCMod.PostRender]={}, [BRCMod.RenderVersion]={}},
     [ModCallbacks.MC_POST_UPDATE] = {[BRCMod.PostUpdate]={}},
     [ModCallbacks.MC_PRE_GET_COLLECTIBLE] = {[BRCMod.PreGetCollectible]={}},
