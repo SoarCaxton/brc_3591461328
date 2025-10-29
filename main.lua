@@ -1,23 +1,23 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.8.0'
+BRCMod.Version = '1.8.1'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
 end
 BRCMod.BOSSES = {
-    [1] = {stage='stage 6', go='goto s.boss.1060',levelstage = LevelStage.STAGE3_2, name = 'Mom'},
-    [2] = {stage='stage 8', go='goto s.boss.1080',levelstage = LevelStage.STAGE4_2, name = 'Mom\'s Heart'},
-    [3] = {stage='stage 6c', go='goto s.boss.6030',levelstage = LevelStage.STAGE3_2, name = 'Mom (mausoleum)'},
-    [4] = {stage='stage 6c', go='goto s.boss.6040',levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
-    [5] = {stage='stage 10a', go='goto s.boss.3380',levelstage = LevelStage.STAGE5, name = 'Isaac'},
-    [6] = {stage='stage 10', go='goto s.boss.3600',levelstage = LevelStage.STAGE5, name = 'Satan'},
-    [7] = {stage='stage 11a', go='goto s.boss.3390',levelstage = LevelStage.STAGE6, name = '???'},
-    [8] = {stage='stage 11', go='goto s.boss.5130',levelstage = LevelStage.STAGE6, name = 'The Lamb'},
-    [9] = {stage='stage 11', go='goto s.boss.5000',levelstage = LevelStage.STAGE6, name = 'Mega Satan'},
-    [10] = {stage='stage 8c', go='goto x.boss.1',levelstage = LevelStage.STAGE4_2, name = 'Mother'},
-    [11] = {stage='stage 11a', go='goto s.boss.1000', levelstage = LevelStage.STAGE6, name = 'Ultra Greed'},
-    [12] = {stage='stage 9', go='goto x.boss.0',levelstage = LevelStage.STAGE4_3, name = 'Boss Room'},  --Hush
-    [13] = {stage='stage 12', go='goto s.boss.3414',levelstage = LevelStage.STAGE7, name = 'Delirium'},
+    [1] = {stage='stage 6', go={'goto s.boss.1060','goto s.boss.1061','goto s.boss.1062','goto s.boss.1063','goto s.boss.1064'},levelstage = LevelStage.STAGE3_2, name = 'Mom'},
+    [2] = {stage='stage 8', go={'goto s.boss.1080','goto s.boss.1081','goto s.boss.1082','goto s.boss.1083','goto s.boss.1084'},levelstage = LevelStage.STAGE4_2, name = 'Mom\'s Heart'},
+    [3] = {stage='stage 6c', go={'goto s.boss.6030'},levelstage = LevelStage.STAGE3_2, name = 'Mom (mausoleum)'},
+    [4] = {stage='stage 6c', go={'goto s.boss.6040'},levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
+    [5] = {stage='stage 10a', go={'goto s.boss.3380','goto s.boss.3381','goto s.boss.3382','goto s.boss.3383'},levelstage = LevelStage.STAGE5, name = 'Isaac'},
+    [6] = {stage='stage 10', go={'goto s.boss.3600'},levelstage = LevelStage.STAGE5, name = 'Satan'},
+    [7] = {stage='stage 11a', go={'goto s.boss.3390','goto s.boss.3391','goto s.boss.3392','goto s.boss.3393'},levelstage = LevelStage.STAGE6, name = '???'},
+    [8] = {stage='stage 11', go={'goto s.boss.5130'},levelstage = LevelStage.STAGE6, name = 'The Lamb'},
+    [9] = {stage='stage 11', go={'goto s.boss.5000'},levelstage = LevelStage.STAGE6, name = 'Mega Satan'},
+    [10] = {stage='stage 8c', go={'goto x.boss.1'},levelstage = LevelStage.STAGE4_2, name = 'Mother'},
+    [11] = {stage='stage 11a', go={'goto s.boss.1000'}, levelstage = LevelStage.STAGE6, name = 'Ultra Greed'},
+    [12] = {stage='stage 9', go={'goto x.boss.0'},levelstage = LevelStage.STAGE4_3, name = 'Boss Room'},  --Hush
+    [13] = {stage='stage 12', go={'goto s.boss.3414'},levelstage = LevelStage.STAGE7, name = 'Delirium'},
     [14] = {stage='stage 13', go=nil, levelstage = LevelStage.STAGE8, name = nil},  --Dogma&The Beast
 }
 BRCMod.ChallengeId = Isaac.GetChallengeIdByName('Boss Rush Challenge')
@@ -136,7 +136,7 @@ function BRCMod:PostNewRoom()
                 if stage ~= boss.levelstage then
                     Isaac.ExecuteCommand(boss.stage)
                 end
-                Isaac.ExecuteCommand(boss.go)
+                Isaac.ExecuteCommand(boss.go[Random()%#boss.go + 1])
                 self.inBossFight = true
                 self.inTp = false
                 self:RemoveCallback(ModCallbacks.MC_POST_UPDATE, tmp_tp)
@@ -228,7 +228,7 @@ function BRCMod:CountDownToBoss()
             self.inTp = true
             Isaac.ExecuteCommand(nextBoss.stage)
             if nextBoss.go then
-                Isaac.ExecuteCommand(nextBoss.go)
+                Isaac.ExecuteCommand(nextBoss.go[Random()%#nextBoss.go + 1])
                 self.inBossFight = true
             end
             self.inTp = false
