@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.8.1'
+BRCMod.Version = '1.8.2'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -264,7 +264,8 @@ function BRCMod:ResumeGame(isContinued)
     self.inBossFight = not Game():GetRoom():IsClear()
 end
 function BRCMod:PreSpawnCleanAward(rng, spawnPos)
-    if Game():GetLevel():GetStage() ~= LevelStage.STAGE8 then
+    local level = Game():GetLevel()
+    if level:GetStage() ~= LevelStage.STAGE8 then
         self.inBossFight = false
         self:SpawnRandomItems()
         for i=1,Game():GetNumPlayers() do
@@ -273,6 +274,9 @@ function BRCMod:PreSpawnCleanAward(rng, spawnPos)
             player:AddSoulHearts(2)
             player:DonateLuck(1)
         end
+    elseif level:GetCurrentRoomDesc().Data.Name == 'Beast Room' then
+        local musicManager = MusicManager()
+        musicManager:Crossfade(Music.MUSIC_JINGLE_BEAST_OVER)
     end
     return true
 end
