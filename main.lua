@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.8.2'
+BRCMod.Version = '1.9.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -85,6 +85,16 @@ function BRCMod:SpawnRandomItems()
             item.OptionsPickupIndex = 1
         end
     end
+    local RandomPickupVariant = {
+        PickupVariant.PICKUP_COIN,
+        PickupVariant.PICKUP_BOMB,
+        PickupVariant.PICKUP_KEY,
+        PickupVariant.PICKUP_HEART,
+        PickupVariant.PICKUP_TRINKET,
+        PickupVariant.PICKUP_PILL,
+        PickupVariant.PICKUP_TAROTCARD
+    }
+    Isaac.Spawn(EntityType.ENTITY_PICKUP, RandomPickupVariant[Random()%#RandomPickupVariant + 1], 0, Isaac.GetFreeNearPosition(roomCenter, 40), Vector.Zero, nil)
 end
 function BRCMod:PostPickupInit(pickup)
     pickup.Wait = 60
@@ -256,6 +266,13 @@ function BRCMod:SpawnStartingItems()
         self.noQ34Items = false
         self.startingItems = true
         self:SpawnRandomItems()
+        for i=1,Game():GetNumPlayers() do
+            local player = Isaac.GetPlayer(i-1)
+            if not player.Parent then
+                player:AddBombs(10)
+                player:AddKeys(3)
+            end
+        end
         self.noQ34Items = false
         self.startingItems = false
     end
