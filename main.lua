@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.9.0'
+BRCMod.Version = '1.9.1'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -262,19 +262,25 @@ BRCMod.startingItems = false
 function BRCMod:SpawnStartingItems()
     local level = Game():GetLevel()
     if level:GetStage() == LevelStage.STAGE1_1 and level:GetCurrentRoom():IsFirstVisit() then
-        self.inBossFight = false
-        self.noQ34Items = false
-        self.startingItems = true
-        self:SpawnRandomItems()
-        for i=1,Game():GetNumPlayers() do
-            local player = Isaac.GetPlayer(i-1)
-            if not player.Parent then
-                player:AddBombs(10)
-                player:AddKeys(3)
+        local delayedSpawn
+        delayedSpawn = function()
+            if Game():GetFrameCount()<3 then return end
+            self.inBossFight = false
+            self.noQ34Items = false
+            self.startingItems = true
+            self:SpawnRandomItems()
+            for i=1,Game():GetNumPlayers() do
+                local player = Isaac.GetPlayer(i-1)
+                if not player.Parent then
+                    player:AddBombs(10)
+                    player:AddKeys(3)
+                end
             end
+            self.noQ34Items = false
+            self.startingItems = false
+            self:RemoveCallback(ModCallbacks.MC_POST_UPDATE, delayedSpawn)
         end
-        self.noQ34Items = false
-        self.startingItems = false
+        self:AddCallback(ModCallbacks.MC_POST_UPDATE, delayedSpawn)
     end
 end
 function BRCMod:ResumeGame(isContinued)
