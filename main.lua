@@ -22,9 +22,10 @@ BRCMod.BOSSES = {
 }
 BRCMod.ChallengeId = Isaac.GetChallengeIdByName('Boss Rush Challenge')
 BRCMod.Challenge2Id = Isaac.GetChallengeIdByName('Boss Rush Challenge - No Q4 Items')
+BRCMod.Challenge3Id = Isaac.GetChallengeIdByName('Boss Rush Challenge - Least Items')
 function BRCMod:LoadCallbacks()
     local challenge = Isaac.GetChallenge()
-    if challenge ~= self.ChallengeId and challenge ~= self.Challenge2Id then return end
+    if challenge ~= self.ChallengeId and challenge ~= self.Challenge2Id and challenge ~= self.Challenge3Id then return end
     if self.CallbacksLoaded then return end
     for callback, funcs in pairs(self.Callbacks) do
         for func, args in pairs(funcs) do
@@ -105,7 +106,7 @@ function BRCMod:PostPickupInit(pickup)
 end
 function BRCMod:PostGameStarted(isContinued)
     local challenge = Isaac.GetChallenge()
-    if challenge == self.ChallengeId or challenge == self.Challenge2Id then
+    if challenge == self.ChallengeId or challenge == self.Challenge2Id or challenge == self.Challenge3Id then
         if not self.CallbacksLoaded then
             self:LoadCallbacks()
         end
@@ -374,6 +375,8 @@ function BRCMod:RenderVersion()
         r,g,b = 0,1,1
     elseif challenge == self.Challenge2Id then
         r,g,b = 1,0,0
+    elseif challenge == self.Challenge3Id then
+        r,g,b = 0.5,0,0.5
     else
         return
     end
@@ -423,6 +426,18 @@ function BRCMod:PostUpdate()
         Isaac.GridSpawn(GridEntityType.GRID_TELEPORTER,0,selectedPosition,true).State=0
     end
 end
+function BRCMod:RenderDmgRate()
+    if Isaac.GetChallenge() ~= self.Challenge3Id then return end
+    local text = string.format('DMG Multi: %.2f%%', self.dmgRate*100)
+    local textWidth = Isaac.GetTextWidth(text)
+    local r,g,b = 1,1,1
+    if self.dmgRate >= 1 then
+        r,g,b = 0,1,0
+    else
+        r,g,b = 1,0,0
+    end
+    Isaac.RenderText(text, Isaac.GetScreenWidth()/2 - textWidth/2, Isaac.GetScreenHeight() - 30, r, g, b, 1)
+end
 function BRCMod:BlockQ4Items()
     local itemConfig = Isaac.GetItemConfig()
     local maxCollectibleIndex = itemConfig:GetCollectibles().Size-1
@@ -432,27 +447,29 @@ function BRCMod:BlockQ4Items()
     local shouldBlock = false
     if challenge == self.ChallengeId then
         shouldBlock = false
-    elseif challenge == self.Challenge2Id then
-        shouldBlock = true
-    else
-        return
-    end
-    local q4ItemsNum = 0
-    for i=1,game:GetNumPlayers() do
-        if shouldBlock then
-            break
-        end
-        local player = Isaac.GetPlayer(i-1)
-        for j=1,maxCollectibleIndex do
-            local collectible = itemConfig:GetCollectible(j)
-            if collectible and player:HasCollectible(j,true) and collectible.Quality>=4 then
-                q4ItemsNum = q4ItemsNum + 1
-            end
-            if q4ItemsNum >= 2 then
-                shouldBlock = true
+        local q4ItemsNum = 0
+        for i=1,game:GetNumPlayers() do
+            if shouldBlock then
                 break
             end
+            local player = Isaac.GetPlayer(i-1)
+            for j=1,maxCollectibleIndex do
+                local collectible = itemConfig:GetCollectible(j)
+                if collectible and player:HasCollectible(j,true) and collectible.Quality>=4 then
+                    q4ItemsNum = q4ItemsNum + 1
+                end
+                if q4ItemsNum >= 2 then
+                    shouldBlock = true
+                    break
+                end
+            end
         end
+    elseif challenge == self.Challenge2Id then
+        shouldBlock = true
+    elseif challenge == self.Challenge3Id then
+        shouldBlock = false
+    else
+        return
     end
     if shouldBlock then
         for i=1,maxCollectibleIndex do
@@ -471,6 +488,56 @@ function BRCMod:IsBlacklistedItem(collectible)
         end
     end
     return false
+end
+BRCMod.dmgRate = 0
+function BRCMod:CalcDmgRate(entityPlayer)
+    if Isaac.GetChallenge() ~= self.Challenge3Id then return end
+    local itemConfig = Isaac.GetItemConfig()
+    local totalItemsQuantity = 0
+    for k=1,Game():GetNumPlayers() do
+        local player = Isaac.GetPlayer(k-1)
+        local maxCollectibleIndex = itemConfig:GetCollectibles().Size-1
+        local itemsQuantity = 0
+        for i=1,maxCollectibleIndex do
+            local collectible = itemConfig:GetCollectible(i)
+            if collectible and player:HasCollectible(i,true) then
+                local quality = collectible.Quality
+                local amount = player:GetCollectibleNum(i, true)
+                itemsQuantity = itemsQuantity + amount * (quality+1)
+            end
+        end
+        local maxTrinketIndex = itemConfig:GetTrinkets().Size-1
+        for i=1,maxTrinketIndex do
+            local trinket = itemConfig:GetTrinket(i)
+            if trinket and player:HasTrinket(i) then
+                local amount = player:GetTrinketMultiplier(i)
+                itemsQuantity = itemsQuantity + amount * 0.5
+            end
+        end
+        itemsQuantity = itemsQuantity - 8.5   -- 混沌（品质3）、肚脐（品质2）、抹大拉的信仰（品质0.5）、金色7号电池（品质1）
+        totalItemsQuantity = totalItemsQuantity + itemsQuantity
+    end
+    local dmgRate = 3.02988 * 0.523566 ^ (totalItemsQuantity / 5)
+    dmgRate = math.max(0.0001, math.min(3, dmgRate))
+    self.dmgRate = dmgRate
+end
+BRCMod.EntityDmgTaken = {}
+function BRCMod:EntityTakeDmg(entity, amount, damageFlags, damageSource, countdown)
+    if Isaac.GetChallenge() ~= self.Challenge3Id then return end
+    if entity:IsVulnerableEnemy() then
+        local hash = GetPtrHash(entity)
+        if self.EntityDmgTaken[hash] then
+            self.EntityDmgTaken[hash] = nil
+            return true
+        end
+        local dmgRate = self.dmgRate
+        self.EntityDmgTaken[hash] = true
+        entity:TakeDamage(amount * dmgRate, damageFlags, damageSource, countdown)
+        return false
+    end
+end
+function BRCMod:ClearEntityDmgTaken()
+    self.EntityDmgTaken = {}
 end
 function BRCMod:PreGetCollectible(itemPoolType, decrease, seed)
     if self.startingItems then
@@ -568,14 +635,17 @@ BRCMod.Callbacks = {
     [ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = {[BRCMod.PreSpawnCleanAward]={}},
     [ModCallbacks.MC_POST_PICKUP_INIT] = {[BRCMod.PostPickupInit]={PickupVariant.PICKUP_COLLECTIBLE}},
     [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.PostNPCRender]={EntityType.ENTITY_BEAST}, [BRCMod.Mom]={EntityType.ENTITY_MOM}},
-    [ModCallbacks.MC_POST_RENDER] = {[BRCMod.PostRender]={}, [BRCMod.RenderVersion]={}},
+    [ModCallbacks.MC_POST_RENDER] = {[BRCMod.PostRender]={}, [BRCMod.RenderVersion]={}, [BRCMod.RenderDmgRate]={}},
     [ModCallbacks.MC_POST_UPDATE] = {[BRCMod.PostUpdate]={}},
     [ModCallbacks.MC_PRE_GET_COLLECTIBLE] = {[BRCMod.PreGetCollectible]={}},
     [ModCallbacks.MC_POST_GET_COLLECTIBLE] = {[BRCMod.PostGetCollectible]={}},
     [ModCallbacks.MC_GET_CARD] = {[BRCMod.GetCard]={}},
     [ModCallbacks.MC_POST_PICKUP_SELECTION] = {[BRCMod.PostPickupSelection]={}},
     [ModCallbacks.MC_GET_PILL_COLOR] = {[BRCMod.GetPillColor]={}},
-    [ModCallbacks.MC_GET_TRINKET] = {[BRCMod.GetTrinket]={}}
+    [ModCallbacks.MC_GET_TRINKET] = {[BRCMod.GetTrinket]={}},
+    [ModCallbacks.MC_POST_PEFFECT_UPDATE] = {[BRCMod.CalcDmgRate]={}},
+    [ModCallbacks.MC_ENTITY_TAKE_DMG] = {[BRCMod.EntityTakeDmg]={}},
+    [ModCallbacks.MC_PRE_GAME_EXIT] = {[BRCMod.ClearEntityDmgTaken]={}},
 }
 BRCMod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, BRCMod.PostGameStarted)
 for callback,funcs in pairs(BRCMod.Callbacks) do

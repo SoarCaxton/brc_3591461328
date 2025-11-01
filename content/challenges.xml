@@ -31,4 +31,5 @@
 <challenges version="1">
 	<challenge name="Boss Rush Challenge" id="1" startingitems="402,458" startingtrinkets="55,32771" startingcard="4" endstage="12" roomfilter="2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,27,28,29" cursefilter="123" getcurse="4" coins="20" difficulty="1"/>
 	<challenge name="Boss Rush Challenge - No Q4 Items" id="2" startingitems="402,458" startingtrinkets="55,32771" startingcard="16" endstage="12" roomfilter="2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,27,28,29" cursefilter="123" getcurse="4" soulhp="1" coins="20" adddamage="0.867347" difficulty="1"/>
+	<challenge name="Boss Rush Challenge - Least Items" id="3" startingitems="402,458" startingtrinkets="55,32771" startingcard="4" endstage="12" roomfilter="2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,27,28,29" cursefilter="123" getcurse="4" coins="20" difficulty="1"/>
 </challenges>
