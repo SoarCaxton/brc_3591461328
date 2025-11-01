@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.10.0'
+BRCMod.Version = '1.11.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -67,11 +67,15 @@ function BRCMod:SpawnRandomItems()
     local roomCenter = room:GetCenterPos()
     local bossIndex = self:GetCurrentBossIndex()
     local x,y
-    if bossIndex < 3 then
+    if bossIndex < 2 then
         x,y = 1, 3
+    elseif bossIndex < 4 then
+        x,y = 1, 2
     elseif bossIndex < 6 then
         x,y = 1, 1
-    elseif bossIndex < 9 then
+    elseif bossIndex < 8 then
+        x,y = 0, 3
+    elseif bossIndex < 10 then
         x,y = 0, 2
     elseif bossIndex < 12 then
         x,y = 0, 1
