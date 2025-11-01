@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.0'
+BRCMod.Version = '1.11.1'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -517,7 +517,7 @@ function BRCMod:CalcDmgRate(entityPlayer)
         itemsQuantity = itemsQuantity - 8.5   -- 混沌（品质3）、肚脐（品质2）、抹大拉的信仰（品质0.5）、金色7号电池（品质1）
         totalItemsQuantity = totalItemsQuantity + itemsQuantity
     end
-    local dmgRate = 3.02988 * 0.523566 ^ (totalItemsQuantity / 5)
+    local dmgRate = 3.00036 * 0.546926 ^ (totalItemsQuantity / 10)
     dmgRate = math.max(0.0001, math.min(3, dmgRate))
     self.dmgRate = dmgRate
 end
