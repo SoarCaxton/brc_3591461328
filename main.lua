@@ -1,14 +1,14 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.9.1'
+BRCMod.Version = '1.10.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
 end
 BRCMod.BOSSES = {
     [1] = {stage='stage 6', go={'goto s.boss.1060','goto s.boss.1061','goto s.boss.1062','goto s.boss.1063','goto s.boss.1064'},levelstage = LevelStage.STAGE3_2, name = 'Mom'},
-    [2] = {stage='stage 8', go={'goto s.boss.1080','goto s.boss.1081','goto s.boss.1082','goto s.boss.1083','goto s.boss.1084'},levelstage = LevelStage.STAGE4_2, name = 'Mom\'s Heart'},
+    [2] = {stage='stage 6c', go={'goto s.boss.6040'},levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
     [3] = {stage='stage 6c', go={'goto s.boss.6030'},levelstage = LevelStage.STAGE3_2, name = 'Mom (mausoleum)'},
-    [4] = {stage='stage 6c', go={'goto s.boss.6040'},levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
+    [4] = {stage='stage 8', go={'goto s.boss.1090','goto s.boss.1091','goto s.boss.1092','goto s.boss.1093','goto s.boss.1094'},levelstage = LevelStage.STAGE4_2, name = 'It Lives!'},
     [5] = {stage='stage 10a', go={'goto s.boss.3380','goto s.boss.3381','goto s.boss.3382','goto s.boss.3383'},levelstage = LevelStage.STAGE5, name = 'Isaac'},
     [6] = {stage='stage 10', go={'goto s.boss.3600'},levelstage = LevelStage.STAGE5, name = 'Satan'},
     [7] = {stage='stage 11a', go={'goto s.boss.3390','goto s.boss.3391','goto s.boss.3392','goto s.boss.3393'},levelstage = LevelStage.STAGE6, name = '???'},
@@ -261,7 +261,8 @@ end
 BRCMod.startingItems = false
 function BRCMod:SpawnStartingItems()
     local level = Game():GetLevel()
-    if level:GetStage() == LevelStage.STAGE1_1 and level:GetCurrentRoom():IsFirstVisit() then
+    local safeGridIndex = level:GetCurrentRoomDesc().SafeGridIndex
+    if level:GetStage() == LevelStage.STAGE1_1 and level:GetCurrentRoom():IsFirstVisit() and GetPtrHash(level:GetRoomByIdx(safeGridIndex,-1)) == GetPtrHash(level:GetRoomByIdx(safeGridIndex,0))then
         local delayedSpawn
         delayedSpawn = function()
             if Game():GetFrameCount()<3 then return end
