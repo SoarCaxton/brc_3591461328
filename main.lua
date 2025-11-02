@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.1'
+BRCMod.Version = '1.11.2'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -609,7 +609,7 @@ function BRCMod:GetPillColor(seed)
     self.InGetPillColor = false
     local pillEffect = itemPool:GetPillEffect(pillColor)
     if self:IsBlacklistedPill(pillEffect) then
-        local pillRNG = Isaac.GetPlayer():GetPillRNG(PillEffect.PILLEFFECT_NULL)
+        local pillRNG = Isaac.GetPlayer():GetPillRNG(REPENTANCE_PLUS and PillEffect.PILLEFFECT_NULL or PillEffect.PILLEFFECT_BAD_GAS)
         return itemPool:GetPill(pillRNG:Next())
     end
 end
