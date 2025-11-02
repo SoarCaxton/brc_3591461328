@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.2'
+BRCMod.Version = '1.11.3'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -493,17 +493,17 @@ BRCMod.dmgRate = 0
 function BRCMod:CalcDmgRate(entityPlayer)
     if Isaac.GetChallenge() ~= self.Challenge3Id then return end
     local itemConfig = Isaac.GetItemConfig()
-    local totalItemsQuantity = 0
+    local totalItemsQuality = 0
     for k=1,Game():GetNumPlayers() do
         local player = Isaac.GetPlayer(k-1)
         local maxCollectibleIndex = itemConfig:GetCollectibles().Size-1
-        local itemsQuantity = 0
+        local itemsQuality = 0
         for i=1,maxCollectibleIndex do
             local collectible = itemConfig:GetCollectible(i)
             if collectible and player:HasCollectible(i,true) then
                 local quality = collectible.Quality
                 local amount = player:GetCollectibleNum(i, true)
-                itemsQuantity = itemsQuantity + amount * (quality+1)
+                itemsQuality = itemsQuality + amount * 2 ^ quality
             end
         end
         local maxTrinketIndex = itemConfig:GetTrinkets().Size-1
@@ -511,13 +511,13 @@ function BRCMod:CalcDmgRate(entityPlayer)
             local trinket = itemConfig:GetTrinket(i)
             if trinket and player:HasTrinket(i) then
                 local amount = player:GetTrinketMultiplier(i)
-                itemsQuantity = itemsQuantity + amount * 0.5
+                itemsQuality = itemsQuality + amount * 0.5
             end
         end
-        itemsQuantity = itemsQuantity - 8.5   -- 混沌（品质3）、肚脐（品质2）、抹大拉的信仰（品质0.5）、金色7号电池（品质1）
-        totalItemsQuantity = totalItemsQuantity + itemsQuantity
+        itemsQuality = itemsQuality - 13.5   -- 混沌（品质8）、肚脐（品质4）、抹大拉的信仰（品质0.5）、金色7号电池（品质1）
+        totalItemsQuality = totalItemsQuality + itemsQuality
     end
-    local dmgRate = 3.00036 * 0.546926 ^ (totalItemsQuantity / 10)
+    local dmgRate = 3 / (1 + totalItemsQuality * 0.05)
     dmgRate = math.max(0.0001, math.min(3, dmgRate))
     self.dmgRate = dmgRate
 end
