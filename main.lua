@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.4'
+BRCMod.Version = '1.11.5'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -498,7 +498,7 @@ function BRCMod:BlockQ4Items()
     elseif challenge == self.Challenge2Id then
         shouldBlock = true
     elseif challenge == self.Challenge3Id then
-        shouldBlock = false
+        shouldBlock = true
     else
         return
     end
