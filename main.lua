@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.3'
+BRCMod.Version = '1.11.4'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -68,7 +68,9 @@ function BRCMod:SpawnRandomItems()
     local roomCenter = room:GetCenterPos()
     local bossIndex = self:GetCurrentBossIndex()
     local x,y
-    if bossIndex < 2 then
+    if Isaac.GetChallenge() == self.Challenge3Id then
+        x,y = 1,1
+    elseif bossIndex < 2 then
         x,y = 1, 3
     elseif bossIndex < 4 then
         x,y = 1, 2
@@ -103,6 +105,31 @@ function BRCMod:SpawnRandomItems()
 end
 function BRCMod:PostPickupInit(pickup)
     pickup.Wait = 60
+end
+function BRCMod:PostPickupRender(entityPickup, renderOffset)
+    if Isaac.GetChallenge() ~= self.Challenge3Id then return end
+    local collectible = Isaac.GetItemConfig():GetCollectible(entityPickup.SubType)
+    if not collectible then return end
+    local quality = collectible.Quality
+    local text = tostring(quality)
+    local textWidth = Isaac.GetTextWidth(text)
+    local textSize = 0.7
+    local pos = Isaac.WorldToRenderPosition(entityPickup.Position + entityPickup.PositionOffset) + renderOffset
+    local r,g,b = 1,1,1
+    if quality < 0 then
+        r,g,b = 0,0,0
+    elseif quality < 1 then
+        r,g,b = 1,1,1
+    elseif quality < 2 then
+        r,g,b = 1,1,0
+    elseif quality < 3 then
+        r,g,b = 0,1,0
+    elseif quality < 4 then
+        r,g,b = 1,0,1
+    else
+        r,g,b = 1,0,0
+    end
+    Isaac.RenderScaledText(text, pos.X - textWidth*textSize/2, pos.Y, textSize, textSize, r, g, b, 1)
 end
 function BRCMod:PostGameStarted(isContinued)
     local challenge = Isaac.GetChallenge()
@@ -296,7 +323,11 @@ function BRCMod:PreSpawnCleanAward(rng, spawnPos)
     local level = Game():GetLevel()
     if level:GetStage() ~= LevelStage.STAGE8 then
         self.inBossFight = false
+        if self:GetCurrentBossIndex() < 3 then
+            self.startingItems = true
+        end
         self:SpawnRandomItems()
+        self.startingItems = false
         for i=1,Game():GetNumPlayers() do
             local player = Isaac.GetPlayer(i-1)
             player:AddHearts(2)
@@ -634,6 +665,7 @@ BRCMod.Callbacks = {
     [ModCallbacks.MC_POST_NEW_ROOM] = {[BRCMod.PostNewRoom]={}, [BRCMod.SpawnStartingItems]={}},
     [ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = {[BRCMod.PreSpawnCleanAward]={}},
     [ModCallbacks.MC_POST_PICKUP_INIT] = {[BRCMod.PostPickupInit]={PickupVariant.PICKUP_COLLECTIBLE}},
+    [ModCallbacks.MC_POST_PICKUP_RENDER] = {[BRCMod.PostPickupRender]={PickupVariant.PICKUP_COLLECTIBLE}},
     [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.PostNPCRender]={EntityType.ENTITY_BEAST}, [BRCMod.Mom]={EntityType.ENTITY_MOM}},
     [ModCallbacks.MC_POST_RENDER] = {[BRCMod.PostRender]={}, [BRCMod.RenderVersion]={}, [BRCMod.RenderDmgRate]={}},
     [ModCallbacks.MC_POST_UPDATE] = {[BRCMod.PostUpdate]={}},
