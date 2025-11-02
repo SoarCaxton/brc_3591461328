@@ -189,7 +189,7 @@ function BRCMod:PostNewRoom()
     end
     if name == 'Genesis Room'  then
         if self.inBossFight then
-            Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TAROTCARD, Card.CARD_FOOL, room:GetCenterPos(), Vector.Zero, nil)
+            Isaac.GridSpawn(GridEntityType.GRID_TELEPORTER,7,room:GetCenterPos(),true).State=0
         end
         if room:IsFirstVisit() then
             self.countDown = 3600
@@ -294,7 +294,7 @@ BRCMod.startingItems = false
 function BRCMod:SpawnStartingItems()
     local level = Game():GetLevel()
     local safeGridIndex = level:GetCurrentRoomDesc().SafeGridIndex
-    if level:GetStage() == LevelStage.STAGE1_1 and level:GetCurrentRoom():IsFirstVisit() and GetPtrHash(level:GetRoomByIdx(safeGridIndex,-1)) == GetPtrHash(level:GetRoomByIdx(safeGridIndex,0))then
+    if level:GetStage() == LevelStage.STAGE1_1 and level:GetCurrentRoom():IsFirstVisit() and GetPtrHash(level:GetRoomByIdx(safeGridIndex,-1)) == GetPtrHash(level:GetRoomByIdx(safeGridIndex,0)) and safeGridIndex > 0 then
         local delayedSpawn
         delayedSpawn = function()
             if Game():GetFrameCount()<3 then return end
@@ -429,8 +429,9 @@ function BRCMod:PostUpdate()
     local level = game:GetLevel()
     local roomDesc = level:GetCurrentRoomDesc()
     local name = roomDesc.Data.Name
-    if level:GetStage() == LevelStage.STAGE8 or name == 'Death Certificate' or self.inBossFight then return end
+    if level:GetStage() == LevelStage.STAGE8 or name == 'Death Certificate' then return end
     local teleporter
+    local teleporterVariant = -1
     local firstFreeGridIndex = room:GetGridSize()
     local lastFreeGridIndex = -1
     for i=1,room:GetGridSize() do
@@ -439,6 +440,7 @@ function BRCMod:PostUpdate()
             local type = grid:GetType()
             if type == GridEntityType.GRID_TELEPORTER then
                 teleporter = grid
+                teleporterVariant = grid:GetVariant()
             elseif type == GridEntityType.GRID_STAIRS then
                 room:RemoveGridEntity(i-1,0,false)
             end
@@ -449,10 +451,14 @@ function BRCMod:PostUpdate()
     end
     if teleporter then
         if teleporter.State ~= 0 then
-            self:CountDownToBoss()
-            self.countDown = 0
+            if teleporterVariant == 7 then
+                Game():StartRoomTransition(level:GetStartingRoomIndex(), Direction.NO_DIRECTION)
+            else
+                self:CountDownToBoss()
+                self.countDown = 0
+            end
         end
-    else
+    elseif not self.inBossFight then
         local firstFreePos = room:GetGridPosition(firstFreeGridIndex)
         local lastFreePos = room:GetGridPosition(lastFreeGridIndex)
         local selectFirst = true
