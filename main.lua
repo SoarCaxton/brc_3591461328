@@ -580,6 +580,7 @@ end
 function BRCMod:ClearEntityDmgTaken()
     self.EntityDmgTaken = {}
 end
+BRCMod.startingItemsQualityThreshold = 3
 function BRCMod:PreGetCollectible(itemPoolType, decrease, seed)
     if self.startingItems then
         local itemConfig = Isaac.GetItemConfig()
@@ -594,12 +595,8 @@ function BRCMod:PreGetCollectible(itemPoolType, decrease, seed)
     end
     self:BlockQ4Items()
 end
-BRCMod.startingItemsQualityThreshold = 3
 function BRCMod:PostGetCollectible(selectedCollectible, itemPoolType, decrease, seed)
     local itemPool = Game():GetItemPool()
-    if decrease then
-        itemPool:RemoveCollectible(selectedCollectible)
-    end
     local itemConfig = Isaac.GetItemConfig()
     local collectible = itemConfig:GetCollectible(selectedCollectible)
     if self.startingItems and collectible.Quality<self.startingItemsQualityThreshold then
@@ -607,10 +604,14 @@ function BRCMod:PostGetCollectible(selectedCollectible, itemPoolType, decrease, 
         itemPool:ResetRoomBlacklist()
         return itemPool:GetCollectible(itemPoolType, decrease, seed)
     end
+    if self:IsBlacklistedItem(selectedCollectible) then
+        itemPool:RemoveCollectible(selectedCollectible)
+        return itemPool:GetCollectible(itemPoolType, decrease, seed)
+    end
     self.startingItemsQualityThreshold = 3
     itemPool:ResetRoomBlacklist()
-    if self:IsBlacklistedItem(selectedCollectible) then
-        return itemPool:GetCollectible(itemPoolType, decrease, seed)
+    if decrease then
+        itemPool:RemoveCollectible(selectedCollectible)
     end
 end
 function BRCMod:IsBlacklistedCard(card)
