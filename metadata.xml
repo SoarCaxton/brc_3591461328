@@ -17,7 +17,7 @@
 	挑战 - 自定义挑战 - Boss Rush Challenge
     注意：不要在Boss房外退出游戏，否则挑战进度会清零！
 	</description>
-    <version>1.11.5</version>
+    <version>1.11.6</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Bosses"/>

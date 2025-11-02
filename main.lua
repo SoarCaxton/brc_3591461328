@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.5'
+BRCMod.Version = '1.11.6'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -318,12 +318,22 @@ function BRCMod:SpawnStartingItems()
 end
 function BRCMod:ResumeGame(isContinued)
     self.inBossFight = not Game():GetRoom():IsClear()
+    self.lastBoss = isContinued and self.lastBoss or 0
 end
 function BRCMod:PreSpawnCleanAward(rng, spawnPos)
     local level = Game():GetLevel()
+    local bossIndex = self:GetCurrentBossIndex()
+    local shouldSpawn = false
+    if bossIndex > self.lastBoss then
+        self.lastBoss = bossIndex
+        shouldSpawn = true
+    end
     if level:GetStage() ~= LevelStage.STAGE8 then
         self.inBossFight = false
-        if self:GetCurrentBossIndex() < 3 then
+        if not shouldSpawn then
+            return true
+        end
+        if bossIndex < 3 then
             self.startingItems = true
         end
         self:SpawnRandomItems()
@@ -617,9 +627,12 @@ function BRCMod:GetCard(rng, card, includePlayingCards, includeRunes, OnlyRunes)
     end
 end
 function BRCMod:PostPickupSelection(entityPickup, variant, subType)
-    if variant == PickupVariant.PICKUP_TAROTCARD and Isaac.GetItemConfig():GetCard(subType):IsRune() and self:IsBlacklistedCard(subType) then
+    if variant == PickupVariant.PICKUP_TAROTCARD and self:IsBlacklistedCard(subType) then
         local rng = Isaac.GetPlayer():GetCardRNG(subType)
-        local newSubType = Game():GetItemPool():GetCard(rng:Next(), true, true, true)
+        local card = Isaac.GetItemConfig():GetCard(subType)
+        local playing = card:IsCard()
+        local onlyRunes = card:IsRune()
+        local newSubType = Game():GetItemPool():GetCard(rng:Next(), playing, not playing, onlyRunes)
         return {variant, newSubType}
     end
 end
