@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.11.6'
+BRCMod.Version = '1.12.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -586,6 +586,18 @@ end
 function BRCMod:ClearEntityDmgTaken()
     self.EntityDmgTaken = {}
 end
+function BRCMod:PlayerTakeDmg(entity, amount, damageFlags, damageSource, countdown)
+    local player = entity:ToPlayer()
+    if not player then return end
+    local isPenalty = true
+    local safeFlags = DamageFlag.DAMAGE_RED_HEARTS | DamageFlag.DAMAGE_IV_BAG | DamageFlag.DAMAGE_FAKE | DamageFlag.DAMAGE_NO_PENALTIES
+    if player:GetPlayerType() == PlayerType.PLAYER_JACOB_B and damageSource == EntityType.ENTITY_DARK_ESAU or damageFlags & safeFlags > 0 then
+        isPenalty = false
+    end
+    if isPenalty and Random()%100 < 15 then
+        player:DonateLuck(-1)
+    end
+end
 BRCMod.startingItemsQualityThreshold = 3
 function BRCMod:PreGetCollectible(itemPoolType, decrease, seed)
     if self.startingItems then
@@ -696,7 +708,7 @@ BRCMod.Callbacks = {
     [ModCallbacks.MC_GET_PILL_COLOR] = {[BRCMod.GetPillColor]={}},
     [ModCallbacks.MC_GET_TRINKET] = {[BRCMod.GetTrinket]={}},
     [ModCallbacks.MC_POST_PEFFECT_UPDATE] = {[BRCMod.CalcDmgRate]={}},
-    [ModCallbacks.MC_ENTITY_TAKE_DMG] = {[BRCMod.EntityTakeDmg]={}},
+    [ModCallbacks.MC_ENTITY_TAKE_DMG] = {[BRCMod.EntityTakeDmg]={}, [BRCMod.PlayerTakeDmg]={EntityType.ENTITY_PLAYER}},
     [ModCallbacks.MC_PRE_GAME_EXIT] = {[BRCMod.ClearEntityDmgTaken]={}},
 }
 BRCMod:AddCallback(ModCallbacks.MC_POST_GAME_STARTED, BRCMod.PostGameStarted)
