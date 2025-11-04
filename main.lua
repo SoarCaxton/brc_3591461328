@@ -573,14 +573,13 @@ function BRCMod:EntityTakeDmg(entity, amount, damageFlags, damageSource, countdo
     if Isaac.GetChallenge() ~= self.Challenge3Id then return end
     if entity:IsVulnerableEnemy() then
         local hash = GetPtrHash(entity)
-        if self.EntityDmgTaken[hash] then
-            self.EntityDmgTaken[hash] = nil
-            return true
+        if not self.EntityDmgTaken[hash] then
+            self.EntityDmgTaken[hash] = true
+            local dmgRate = self.dmgRate
+            entity:TakeDamage(amount * dmgRate, damageFlags, damageSource, countdown)
+            return false
         end
-        local dmgRate = self.dmgRate
-        self.EntityDmgTaken[hash] = true
-        entity:TakeDamage(amount * dmgRate, damageFlags, damageSource, countdown)
-        return false
+        self.EntityDmgTaken[hash] = nil
     end
 end
 function BRCMod:ClearEntityDmgTaken()
