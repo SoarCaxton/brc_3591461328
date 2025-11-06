@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.12.0'
+BRCMod.Version = '1.12.1'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -576,8 +576,9 @@ function BRCMod:EntityTakeDmg(entity, amount, damageFlags, damageSource, countdo
         if not self.EntityDmgTaken[hash] then
             self.EntityDmgTaken[hash] = true
             local dmgRate = self.dmgRate
-            entity:TakeDamage(amount * dmgRate, damageFlags, damageSource, countdown)
-            return false
+            entity:TakeDamage(amount * (dmgRate-1), damageFlags, damageSource, countdown)
+            return
+            -- return false
         end
         self.EntityDmgTaken[hash] = nil
     end
