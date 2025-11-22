@@ -1,24 +1,24 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.12.1'
+BRCMod.Version = '1.13.0'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
 end
 BRCMod.BOSSES = {
     [1] = {stage='stage 6', go={'goto s.boss.1060','goto s.boss.1061','goto s.boss.1062','goto s.boss.1063','goto s.boss.1064'},levelstage = LevelStage.STAGE3_2, name = 'Mom'},
-    [2] = {stage='stage 6c', go={'goto s.boss.6040'},levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
+    [2] = {stage='stage 8', go={'goto s.boss.1090','goto s.boss.1091','goto s.boss.1092','goto s.boss.1093','goto s.boss.1094'},levelstage = LevelStage.STAGE4_2, name = 'It Lives!'},
     [3] = {stage='stage 6c', go={'goto s.boss.6030'},levelstage = LevelStage.STAGE3_2, name = 'Mom (mausoleum)'},
-    [4] = {stage='stage 8', go={'goto s.boss.1090','goto s.boss.1091','goto s.boss.1092','goto s.boss.1093','goto s.boss.1094'},levelstage = LevelStage.STAGE4_2, name = 'It Lives!'},
+    [4] = {stage='stage 6c', go={'goto s.boss.6040'},levelstage = LevelStage.STAGE3_2, name = 'Mom\'s Heart (mausoleum)'},
     [5] = {stage='stage 10a', go={'goto s.boss.3380','goto s.boss.3381','goto s.boss.3382','goto s.boss.3383'},levelstage = LevelStage.STAGE5, name = 'Isaac'},
     [6] = {stage='stage 10', go={'goto s.boss.3600'},levelstage = LevelStage.STAGE5, name = 'Satan'},
     [7] = {stage='stage 11a', go={'goto s.boss.3390','goto s.boss.3391','goto s.boss.3392','goto s.boss.3393'},levelstage = LevelStage.STAGE6, name = '???'},
     [8] = {stage='stage 11', go={'goto s.boss.5130'},levelstage = LevelStage.STAGE6, name = 'The Lamb'},
-    [9] = {stage='stage 11', go={'goto s.boss.5000'},levelstage = LevelStage.STAGE6, name = 'Mega Satan'},
-    [10] = {stage='stage 8c', go={'goto x.boss.1'},levelstage = LevelStage.STAGE4_2, name = 'Mother'},
-    [11] = {stage='stage 11a', go={'goto s.boss.1000'}, levelstage = LevelStage.STAGE6, name = 'Ultra Greed'},
+    [9] = {stage='stage 8c', go={'goto x.boss.1'},levelstage = LevelStage.STAGE4_2, name = 'Mother'},
+    [10] = {stage='stage 11', go={'goto s.boss.5000'},levelstage = LevelStage.STAGE6, name = 'Mega Satan'},
+    [11] = {stage='stage 13', go=nil, levelstage = LevelStage.STAGE8, name = nil},  --Dogma&The Beast
     [12] = {stage='stage 9', go={'goto x.boss.0'},levelstage = LevelStage.STAGE4_3, name = 'Boss Room'},  --Hush
-    [13] = {stage='stage 12', go={'goto s.boss.3414'},levelstage = LevelStage.STAGE7, name = 'Delirium'},
-    [14] = {stage='stage 13', go=nil, levelstage = LevelStage.STAGE8, name = nil},  --Dogma&The Beast
+    [13] = {stage='stage 11a', go={'goto s.boss.1000'}, levelstage = LevelStage.STAGE6, name = 'Ultra Greed'},
+    [14] = {stage='stage 12', go={'goto s.boss.3414'},levelstage = LevelStage.STAGE7, name = 'Delirium'},
 }
 BRCMod.ChallengeId = Isaac.GetChallengeIdByName('Boss Rush Challenge')
 BRCMod.Challenge2Id = Isaac.GetChallengeIdByName('Boss Rush Challenge - No Q4 Items')
@@ -258,14 +258,6 @@ function BRCMod:CountDownToBoss()
         local posX = Isaac.GetScreenWidth()/2
         local posY = Isaac.GetScreenHeight()/32
         Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-        -- text = 'Press Backspace to continue...'
-        -- textWidth = Isaac.GetTextWidth(text)
-        -- textSize = 1
-        -- posY = posY + 30
-        -- Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-        -- if self.isButtonBackspaceTriggered then
-        --     self.countDown = 0
-        -- end
         if self.countDown <= 0 then
             self.inTp = true
             Isaac.ExecuteCommand(nextBoss.stage)
@@ -324,11 +316,11 @@ function BRCMod:PreSpawnCleanAward(rng, spawnPos)
     local level = Game():GetLevel()
     local bossIndex = self:GetCurrentBossIndex()
     local shouldSpawn = false
-    if bossIndex > self.lastBoss then
+    if bossIndex > self.lastBoss or level:GetCurrentRoomDesc().Data.Name=='Beast Room' then
         self.lastBoss = bossIndex
         shouldSpawn = true
     end
-    if level:GetStage() ~= LevelStage.STAGE8 then
+    if level:GetStage() ~= self.BOSSES[#self.BOSSES].levelstage then
         self.inBossFight = false
         if not shouldSpawn then
             return true
@@ -345,7 +337,11 @@ function BRCMod:PreSpawnCleanAward(rng, spawnPos)
             player:DonateLuck(1)
             SFXManager():Play(SoundEffect.SOUND_LUCK_UP, 2.0)
         end
-    elseif level:GetCurrentRoomDesc().Data.Name == 'Beast Room' then
+    else
+        local trophy = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TROPHY, 0, Game():GetRoom():GetCenterPos(), Vector.Zero, nil)
+        trophy:GetSprite():Play('Appear', true)
+    end
+    if level:GetCurrentRoomDesc().Data.Name == 'Beast Room' then
         local musicManager = MusicManager()
         musicManager:Crossfade(Music.MUSIC_JINGLE_BEAST_OVER)
     end
@@ -365,25 +361,16 @@ function BRCMod:Mom(npc)
         sprite:Reload()
     end
 end
-function BRCMod:PostNPCRender(npc)
+function BRCMod:Beast(npc)
     local sprite = npc:GetSprite()
     if npc:Exists() and npc.Variant == 0 and sprite:GetAnimation() == 'Death' and sprite:GetFrame() >= 60 then
         npc:Remove()
-        local trophy = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TROPHY, 0, Game():GetRoom():GetCenterPos(), Vector.Zero, npc)
-        trophy:GetSprite():Play('Appear', true)
+        -- local trophy = Isaac.Spawn(EntityType.ENTITY_PICKUP, PickupVariant.PICKUP_TROPHY, 0, Game():GetRoom():GetCenterPos(), Vector.Zero, npc)
+        -- trophy:GetSprite():Play('Appear', true)
     end
 end
 function BRCMod:PostRender()
     local game = Game()
-    -- self.isButtonBackspaceTriggered = false
-    -- if not Game():IsPaused() then
-    --     for i=1,game:GetNumPlayers() do
-    --         if Input.IsButtonPressed(Keyboard.KEY_BACKSPACE, Isaac.GetPlayer(i-1).ControllerIndex) then
-    --             self.isButtonBackspaceTriggered = true
-    --             break
-    --         end
-    --     end
-    -- end
     if not game:GetRoom():IsClear() then
         if not self.inBossFight then
             self.inBossFight = true
@@ -392,16 +379,7 @@ function BRCMod:PostRender()
     end
     if self.inCountDown or self.inBossFight then return end
     local stage = game:GetLevel():GetStage()
-    -- if stage == LevelStage.STAGE1_1 then
-    --     local text = 'Press Backspace to start.'
-    --     local textWidth = Isaac.GetTextWidth(text)
-    --     local textSize = 1
-    --     local posX = Isaac.GetScreenWidth()/2
-    --     local posY = Isaac.GetScreenHeight()/32
-    --     Isaac.RenderScaledText(text, posX - textWidth*textSize/2, posY, textSize, textSize, 1, 1, 1, 1)
-    -- end
-    -- if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 or self.isButtonBackspaceTriggered then
-    if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 then
+    if stage ~= LevelStage.STAGE1_1 and stage ~= LevelStage.STAGE8 or stage == LevelStage.STAGE8 and game:GetLevel():GetCurrentRoomDesc().Data.Name=='Beast Room' then
         self:CountDownToBoss()
     end
 end
@@ -430,18 +408,18 @@ function BRCMod:PostUpdate()
     local level = game:GetLevel()
     local roomDesc = level:GetCurrentRoomDesc()
     local name = roomDesc.Data.Name
-    if level:GetStage() == LevelStage.STAGE8 or name == 'Death Certificate' then return end
-    local teleporter
-    local teleporterVariant = -1
+    if level:GetStage() == LevelStage.STAGE8 and name~='Beast Room' or name == 'Death Certificate' then return end
+    local teleporters = {}
+    local teleportersVariants = {}
     local firstFreeGridIndex = room:GetGridSize()
     local lastFreeGridIndex = -1
     for i=1,room:GetGridSize() do
         local grid = room:GetGridEntity(i-1)
-        if grid then
-            local type = grid:GetType()
+        local type = grid and grid:GetType()
+        if grid and type~=GridEntityType.GRID_GRAVITY then
             if type == GridEntityType.GRID_TELEPORTER then
-                teleporter = grid
-                teleporterVariant = grid:GetVariant()
+                table.insert(teleporters, grid)
+                table.insert(teleportersVariants, grid:GetVariant())
             elseif type == GridEntityType.GRID_STAIRS then
                 room:RemoveGridEntity(i-1,0,false)
             end
@@ -450,13 +428,17 @@ function BRCMod:PostUpdate()
             lastFreeGridIndex = math.max(lastFreeGridIndex, i-1)
         end
     end
-    if teleporter then
-        if teleporter.State ~= 0 then
-            if teleporterVariant == 7 then
-                Game():StartRoomTransition(level:GetStartingRoomIndex(), Direction.NO_DIRECTION)
-            else
-                self:CountDownToBoss()
-                self.countDown = 0
+    if #teleporters>0 then
+        for i, teleporter in ipairs(teleporters) do
+            local variant = teleportersVariants[i]
+            local state = teleporter.State
+            if state ~= 0 then
+                if variant == 7 then
+                    Game():StartRoomTransition(level:GetStartingRoomIndex(), Direction.NO_DIRECTION)
+                else
+                    self:CountDownToBoss()
+                    self.countDown = 0
+                end
             end
         end
     elseif not self.inBossFight then
@@ -471,7 +453,13 @@ function BRCMod:PostUpdate()
             end
         end
         local selectedPosition = selectFirst and firstFreePos or lastFreePos
+        local secondPosition = selectFirst and lastFreePos or firstFreePos
+        room:RemoveGridEntity(room:GetGridIndex(selectedPosition),0,false)
         Isaac.GridSpawn(GridEntityType.GRID_TELEPORTER,0,selectedPosition,true).State=0
+        if level:GetStage() == LevelStage.STAGE8 then
+            room:RemoveGridEntity(room:GetGridIndex(secondPosition),0,false)
+            Isaac.GridSpawn(GridEntityType.GRID_TELEPORTER,7,secondPosition,true).State=0
+        end
     end
 end
 function BRCMod:RenderDmgRate()
@@ -700,7 +688,7 @@ BRCMod.Callbacks = {
     [ModCallbacks.MC_PRE_SPAWN_CLEAN_AWARD] = {[BRCMod.PreSpawnCleanAward]={}},
     [ModCallbacks.MC_POST_PICKUP_INIT] = {[BRCMod.PostPickupInit]={PickupVariant.PICKUP_COLLECTIBLE}},
     [ModCallbacks.MC_POST_PICKUP_RENDER] = {[BRCMod.PostPickupRender]={PickupVariant.PICKUP_COLLECTIBLE}},
-    [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.PostNPCRender]={EntityType.ENTITY_BEAST}, [BRCMod.Mom]={EntityType.ENTITY_MOM}},
+    [ModCallbacks.MC_POST_NPC_RENDER] = {[BRCMod.Beast]={EntityType.ENTITY_BEAST}, [BRCMod.Mom]={EntityType.ENTITY_MOM}},
     [ModCallbacks.MC_POST_RENDER] = {[BRCMod.PostRender]={}, [BRCMod.RenderVersion]={}, [BRCMod.RenderDmgRate]={}},
     [ModCallbacks.MC_POST_UPDATE] = {[BRCMod.PostUpdate]={}},
     [ModCallbacks.MC_PRE_GET_COLLECTIBLE] = {[BRCMod.PreGetCollectible]={}},
