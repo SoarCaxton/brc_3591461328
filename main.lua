@@ -1,5 +1,5 @@
 local BRCMod = RegisterMod('Boss Rush Challenge', 1)
-BRCMod.Version = '1.13.0'
+BRCMod.Version = '1.13.1'
 local Blacklists = require('BRC_Blacklists')
 for k,v in pairs(Blacklists) do
     BRCMod[k] = v
@@ -580,7 +580,7 @@ function BRCMod:PlayerTakeDmg(entity, amount, damageFlags, damageSource, countdo
     if not player then return end
     local isPenalty = true
     local safeFlags = DamageFlag.DAMAGE_RED_HEARTS | DamageFlag.DAMAGE_IV_BAG | DamageFlag.DAMAGE_FAKE | DamageFlag.DAMAGE_NO_PENALTIES
-    if player:GetPlayerType() == PlayerType.PLAYER_JACOB_B and damageSource == EntityType.ENTITY_DARK_ESAU or damageFlags & safeFlags > 0 then
+    if player:GetPlayerType() == PlayerType.PLAYER_JACOB_B and damageSource.Type == EntityType.ENTITY_DARK_ESAU or damageFlags & safeFlags > 0 then
         isPenalty = false
     end
     if isPenalty and math.random(100) < 20 then
