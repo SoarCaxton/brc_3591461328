@@ -583,7 +583,7 @@ function BRCMod:PlayerTakeDmg(entity, amount, damageFlags, damageSource, countdo
     if player:GetPlayerType() == PlayerType.PLAYER_JACOB_B and damageSource.Type == EntityType.ENTITY_DARK_ESAU or damageFlags & safeFlags > 0 then
         isPenalty = false
     end
-    if isPenalty and math.random(100) < 20 then
+    if isPenalty and math.random(100) <= 20 then
         player:DonateLuck(-1)
         SFXManager():Play(SoundEffect.SOUND_LUCK_DOWN, 2.0)
     end
